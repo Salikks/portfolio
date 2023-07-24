@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Interactive Personal Website</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div id="particles-js"></div>
+    <nav class="navbar">
+        <ul class="nav-list">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Gallery</a></li>
+            <li><a href="#">Contact</a></li>
+            <li><a href="#">Projects</a></li>
+        </ul>
+    </nav>
+    <div class="content">
+        <header>
+            <h1>My Interactive Personal Website!</h1>
+        </header>
+        <main>
+            <p>This is my cool interactive personal website. Stay tuned for more awesome projects and updates!</p>
+        </main>
+        <footer>
+            <p>&copy; 2023 MyName</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='particles.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

@@ -1,3 +1,5 @@
+<!-- index.html -->
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,7 +14,8 @@
             <li><a href="#">About</a></li>
             <li><a href="#">Gallery</a></li>
             <li><a href="#">Contact</a></li>
-            <li><a href="#">Projects</a></li>
+            <!-- Add a link to the Pokémon game page -->
+            <li><a href="{{ url_for('pokemon_game') }}">Play Pokémon Game</a></li>
         </ul>
     </nav>
     <div class="content">

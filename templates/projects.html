@@ -1,0 +1,28 @@
+<!-- projects.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Projects</title>
+</head>
+<body>
+    <h1>Our Pokémon Collection</h1>
+    <ul>
+        {% for project in projects %}
+            <li>
+                <h2>{{ project.name }}</h2>
+                <p>Type: {{ project.type }}</p>
+                <p>Description: {{ project.description }}</p>
+                <p>HP: {{ project.hp }}</p>
+                <p>AP: {{ project.ap }}</p>
+                <p>Moves:</p>
+                <ul>
+                    {% for move in project.moves %}
+                        <li>{{ move.name }} (Damage: {{ move.damage }})</li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!-- move_selection.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Move Selection</title>
+</head>
+<body>
+    <h1>Choose Your Move for {{ selected_pokemon.name }}</h1>
+    <form method="post" action="{{ url_for('move_selection', pokemon_name=selected_pokemon.name) }}"> <!-- Updated form action -->
+        <input type="hidden" name="pokemon" value="{{ selected_pokemon.name }}">
+        {% for move in selected_pokemon.moves %}
+            <button type="submit" name="selected_move" value="{{ move.name }}">{{ move.name }} (Damage: {{ move.damage }})</button>
+        {% endfor %}
+    </form>
+</body>
+</html>

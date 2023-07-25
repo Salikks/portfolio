@@ -1,0 +1,27 @@
+<!-- battle_results.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Battle Results</title>
+</head>
+<body>
+    <h2>Battle Log:</h2>
+    {% for round_result in battle_log['rounds'] %}
+        {% if round_result['result'] == 'win' %}
+            <p>Congratulations! Your {{ battle_log['player_name'] }} defeated the opponent.</p>
+        {% elif round_result['result'] == 'lose' %}
+            <p>Your {{ battle_log['player_name'] }} fainted. Try again!</p>
+        {% else %}
+            <p>Round {{ loop.index }}:</p>
+            <p>{{ battle_log['player_name'] }} attacks {{ battle_log['opponent_name'] }} with {{ round_result['player_move'] }}. Damage: {{ round_result['player_damage'] }}</p>
+            <p>{{ battle_log['opponent_name'] }}'s HP: {{ round_result['opponent_hp'] }}</p>
+            <p>{{ battle_log['opponent_name'] }} attacks your {{ battle_log['player_name'] }} with {{ round_result['opponent_move'] }}. Damage: {{ round_result['opponent_damage'] }}</p>
+            <p>Your {{ battle_log['player_name'] }}'s HP: {{ round_result['player_hp'] }}</p>
+        {% endif %}
+    {% endfor %}
+
+    <!-- Add a link to go back to the Pokémon game page -->
+    <a href="{{ url_for('pokemon_game') }}">Back to Pokémon Game</a>
+</body>
+</html>

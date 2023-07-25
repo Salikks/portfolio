@@ -1,0 +1,63 @@
+<!-- pokemon_game.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pokémon Game</title>
+</head>
+<body>
+    <h1>Choose Your Pokémon!</h1>
+    <form method="post">
+        <select name="pokemon">
+            {% for pokemon in pokemon_data %}
+            <option value="{{ pokemon.name }}">{{ pokemon.name }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <input type="submit" value="Select Pokémon">
+    </form>
+    {% if selected_pokemon %}
+    <h2>Choose Your Move for {{ selected_pokemon.name }}</h2>
+    <form method="post" action="{{ url_for('move_selection', pokemon_name=selected_pokemon.name) }}">
+        {% for move in selected_pokemon.moves %}
+        <button type="submit" name="selected_move" value="{{ move.name }}">{{ move.name }} (Damage: {{ move.damage }})</button>
+        {% endfor %}
+    </form>
+    {% endif %}
+    <div>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+    </div>
+    {% if battle_log %}
+    <h2>Battle Log:</h2>
+    {% for round_result in battle_log['rounds'] %}
+    {% if round_result['result'] == 'win' %}
+    <p>Congratulations! Your {{ battle_log['player_name'] }} defeated the opponent.</p>
+    {% elif round_result['result'] == 'lose' %}
+    <p>Your {{ battle_log['player_name'] }} fainted. Try again!</p>
+    {% else %}
+    <p>Round {{ loop.index }}:</p>
+    <p>{{ battle_log['player_name'] }} attacks {{ battle_log['opponent_name'] }} with {{ round_result['player_move'] }}. Damage: {{ round_result['player_damage'] }}</p>
+    <p>{{ battle_log['opponent_name'] }}'s HP: {{ round_result['opponent_hp'] }}</p>
+    <p>{{ battle_log['opponent_name'] }} attacks your {{ battle_log['player_name'] }} with {{ round_result['opponent_move'] }}. Damage: {{ round_result['opponent_damage'] }}</p>
+    <p>Your {{ battle_log['player_name'] }}'s HP: {{ round_result['player_hp'] }}</p>
+    {% endif %}
+    {% endfor %}
+    {% if not battle_log['rounds']|last %}
+    <h2>Choose Your Move for {{ battle_log['player_name'] }}</h2>
+    <form method="post" action="{{ url_for('move_selection', pokemon_name=battle_log['player_name']) }}">
+        {% for move in battle_log['player_moves'] %}
+        <button type="submit" name="selected_move" value="{{ move['name'] }}">{{ move['name'] }} (Damage: {{ move['damage'] }})</button>
+        {% endfor %}
+    </form>
+    {% endif %}
+    {% endif %}
+</body>
+</html>

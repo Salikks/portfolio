@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 import random
+import json
 
 app = Flask(__name__)
 app.secret_key = "your_unique_and_secret_key_here"
@@ -13,6 +14,9 @@ pokemon_data = [
         'hp': 100,
         'ap': 20,
         'max_hp': 100,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,  # Add this line to set the initial round number
+        'level': 1,  # Add this line to set the initial level for Pikachu
         'moves': [
             {'name': 'Thunder Shock', 'damage': 25},
             {'name': 'Quick Attack', 'damage': 20},
@@ -26,6 +30,9 @@ pokemon_data = [
         'hp': 120,
         'ap': 25,
         'max_hp': 120,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,  # Add this line to set the initial round number
+        'level': 1,
         'moves': [
             {'name': 'Flamethrower', 'damage': 35},
             {'name': 'Air Slash', 'damage': 30},
@@ -39,6 +46,9 @@ pokemon_data = [
         'hp': 90,
         'ap': 18,
         'max_hp': 90,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,  # Add this line to set the initial round number
+        'level': 1,
         'moves': [
             {'name': 'Vine Whip', 'damage': 20},
             {'name': 'Razor Leaf', 'damage': 25},
@@ -52,6 +62,9 @@ pokemon_data = [
         'hp': 80,
         'ap': 15,
         'max_hp': 80,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,  # Add this line to set the initial round number
+        'level': 1,
         'moves': [
             {'name': 'Ember', 'damage': 18},
             {'name': 'Scratch', 'damage': 15},
@@ -65,78 +78,334 @@ pokemon_data = [
         'hp': 95,
         'ap': 17,
         'max_hp': 95,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,  # Add this line to set the initial round number
+        'level': 1,
         'moves': [
             {'name': 'Water Gun', 'damage': 22},
             {'name': 'Tackle', 'damage': 18},
             {'name': 'Bubble Beam', 'damage': 28}
         ]
     },
-    # Add move sets for other Pokémon as well
+    {
+        'name': 'Jigglypuff',
+        'type': 'Normal/Fairy',
+        'description': 'Jigglypuff is a cute and fairy-like Pokémon known for its soothing lullabies.',
+        'hp': 95,
+        'ap': 16,
+        'max_hp': 95,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,
+        'level': 1,
+        'moves': [
+            {'name': 'Sing', 'damage': 0},  # Sing puts the opponent to sleep
+            {'name': 'Double Slap', 'damage': 20},
+            {'name': 'Hyper Voice', 'damage': 28},
+        ]
+    },
+    {
+        'name': 'Geodude',
+        'type': 'Rock/Ground',
+        'description': 'Geodude is a Rock and Ground type Pokémon with a rocky exterior.',
+        'hp': 110,
+        'ap': 19,
+        'max_hp': 110,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,
+        'level': 1,
+        'moves': [
+            {'name': 'Rock Throw', 'damage': 24},
+            {'name': 'Mud-Slap', 'damage': 18},
+            {'name': 'Rollout', 'damage': 30},
+        ]
+    },
+    {
+        'name': 'Pidgey',
+        'type': 'Normal/Flying',
+        'description': 'Pidgey is a small bird Pokémon with excellent flying abilities.',
+        'hp': 85,
+        'ap': 14,
+        'max_hp': 85,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,
+        'level': 1,
+        'moves': [
+            {'name': 'Gust', 'damage': 22},
+            {'name': 'Quick Attack', 'damage': 20},
+            {'name': 'Air Cutter', 'damage': 28},
+        ]
+    },
+    {
+        'name': 'Abra',
+        'type': 'Psychic',
+        'description': 'Abra is a Psychic type Pokémon with incredible teleportation powers.',
+        'hp': 70,
+        'ap': 22,
+        'max_hp': 70,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,
+        'level': 1,
+        'moves': [
+            {'name': 'Teleport', 'damage': 0},  # Teleport doesn't deal damage but allows Abra to flee from battles.
+            {'name': 'Psybeam', 'damage': 32},
+            {'name': 'Shadow Ball', 'damage': 35},
+        ]
+    },
+    {
+        'name': 'Machop',
+        'type': 'Fighting',
+        'description': 'Machop is a powerful Fighting type Pokémon with immense strength.',
+        'hp': 100,
+        'ap': 21,
+        'max_hp': 100,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,
+        'level': 1,
+        'moves': [
+            {'name': 'Low Kick', 'damage': 22},
+            {'name': 'Karate Chop', 'damage': 26},
+            {'name': 'Cross Chop', 'damage': 36},
+        ]
+    },
+    {
+        'name': 'Gastly',
+        'type': 'Ghost/Poison',
+        'description': 'Gastly is a Ghost and Poison type Pokémon, lurking in the shadows.',
+        'hp': 75,
+        'ap': 18,
+        'max_hp': 75,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,
+        'level': 1,
+        'moves': [
+            {'name': 'Lick', 'damage': 22},
+            {'name': 'Shadow Punch', 'damage': 26},
+            {'name': 'Sludge Bomb', 'damage': 34},
+        ]
+    },
+    {
+        'name': 'Dratini',
+        'type': 'Dragon',
+        'description': 'Dratini is a Dragon type Pokémon with a gentle and elusive nature.',
+        'hp': 105,
+        'ap': 20,
+        'max_hp': 105,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,
+        'level': 1,
+        'moves': [
+            {'name': 'Dragon Breath', 'damage': 26},
+            {'name': 'Aqua Tail', 'damage': 32},
+            {'name': 'Twister', 'damage': 30},
+        ]
+    },
+    {
+        'name': 'Eevee',
+        'type': 'Normal',
+        'description': 'Eevee is a versatile Normal type Pokémon capable of evolving into various forms.',
+        'hp': 90,
+        'ap': 19,
+        'max_hp': 90,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,
+        'level': 1,
+        'moves': [
+            {'name': 'Tackle', 'damage': 18},
+            {'name': 'Quick Attack', 'damage': 20},
+            {'name': 'Bite', 'damage': 24},
+        ]
+    },
+    {
+        'name': 'Vulpix',
+        'type': 'Fire',
+        'description': 'Vulpix is a Fire type Pokémon with a beautiful flame-tail.',
+        'hp': 85,
+        'ap': 18,
+        'max_hp': 85,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,
+        'level': 1,
+        'moves': [
+            {'name': 'Ember', 'damage': 18},
+            {'name': 'Quick Attack', 'damage': 20},
+            {'name': 'Fire Spin', 'damage': 28},
+        ]
+    },
+    {
+        'name': 'Spearow',
+        'type': 'Normal/Flying',
+        'description': 'Spearow is a small, aggressive bird Pokémon with a sharp beak.',
+        'hp': 80,
+        'ap': 16,
+        'max_hp': 80,
+        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'round': 1,
+        'level': 1,
+        'moves': [
+            {'name': 'Peck', 'damage': 22},
+            {'name': 'Drill Peck', 'damage': 30},
+            {'name': 'Aerial Ace', 'damage': 26},
+        ]
+    },
+
+    # Add more Pokémon here...
 ]
 # Type advantages (for simplicity, we'll use a dictionary)
+# Type advantages (for simplicity, we'll use a dictionary)
 type_advantages = {
-    'Electric': ['Water'],
-    'Grass': ['Fire'],
-    'Fire': ['Grass'],
-    'Water': ['Electric'],
+    'Electric': {
+        'Water': 1.5,
+    },
+    'Grass': {
+        'Water': 1.5,
+        'Fire': 0.5,
+    },
+    'Fire': {
+        'Grass': 1.5,
+        'Water': 0.5,
+    },
+    'Water': {
+        'Fire': 1.5,
+        'Grass': 0.5,
+    },
+    # Add more type advantages here...
 }
 
 
-def battle_round(player_pokemon, opponent, selected_move):
-    # Create a battle log dictionary to store round details
-    battle_log = {'player_name': player_pokemon['name'], 'opponent_name': opponent['name'], 'rounds': []}
+def reset_pokemon_hp():
+    # Helper function to reset the HP of all Pokémon to their initial maximum HP
+    for pokemon in pokemon_data:
+        pokemon['hp'] = pokemon['max_hp']
+    print("HPs have been reset:", pokemon_data)
 
-    while player_pokemon['hp'] > 0 and opponent['hp'] > 0:
-        # Perform a battle round
-        round_result = {}
 
-        # Player attacks opponent
-        player_damage = calculate_damage(player_pokemon, opponent)
-        opponent['hp'] -= player_damage
-        round_result['player_move'] = selected_move['name']
-        round_result['player_damage'] = player_damage
-        round_result['opponent_hp'] = max(opponent['hp'], 0)
+current_round = 0
+current_opponent = None
+battle_log = []  # Initialize the battle log as an empty list
 
-        if opponent['hp'] <= 0:
-            # Opponent has fainted
-            round_result['result'] = 'win'
-            battle_log['rounds'].append(round_result)
-            break
 
-        # Opponent attacks player
-        opponent_move = random.choice(opponent['moves'])
-        opponent_damage = calculate_damage(opponent, player_pokemon)
-        player_pokemon['hp'] -= opponent_damage
-        round_result['opponent_move'] = opponent_move['name']
-        round_result['opponent_damage'] = opponent_damage
-        round_result['player_hp'] = max(player_pokemon['hp'], 0)
+def battle_round(player_pokemon, opponent_pokemon, player_move):
+    global current_round, current_opponent, battle_log
 
-        if player_pokemon['hp'] <= 0:
-            # Player's Pokémon has fainted
-            round_result['result'] = 'lose'
-            battle_log['rounds'].append(round_result)
-            break
+    # Increment the round number before the battle
+    current_round += 1
 
-        # Add the round result to the battle log
-        battle_log['rounds'].append(round_result)
+    # Get a new random move for the opponent at the beginning of each round
+    opponent_move = random.choice(opponent_pokemon['moves'])
 
-    return battle_log
+    # Perform the battle calculations for the player's move
+    player_damage = calculate_damage(player_pokemon, opponent_pokemon, player_move)
+
+    # Perform the battle calculations for the opponent's move
+    opponent_damage = calculate_damage(opponent_pokemon, player_pokemon, opponent_move)
+
+    # Apply the damage to the Pokémon
+    player_pokemon['hp'] -= opponent_damage
+    opponent_pokemon['hp'] -= player_damage
+
+    # Determine the result of the battle round after player's move
+    result = 'ongoing'
+    if player_pokemon['hp'] <= 0:
+        result = 'lose'
+    elif opponent_pokemon['hp'] <= 0:
+        result = 'win'
+
+    # Update the battle log with the latest information
+    battle_log.append({
+        'round': current_round,
+        'player_name': player_pokemon['name'],
+        'player_move_name': player_move['name'],
+        'player_damage': player_damage,
+        'player_hp': player_pokemon['hp'],  # Update with the actual HP after applying damage
+        'opponent_name': opponent_pokemon['name'],
+        'opponent_move_name': opponent_move['name'],
+        'opponent_damage': opponent_damage,
+        'opponent_hp': opponent_pokemon['hp'],  # Update with the actual HP after applying damage
+        'result': result
+    })
+
+    # Reset the round number to 0 and get a new opponent if the battle is over
+    if result != 'ongoing':
+        current_round = 0
+        reset_pokemon_hp()  # Reset Pokémon HP for a new battle round
+        current_opponent = get_random_opponent()  # Get a new opponent from the data
+        session['current_opponent'] = current_opponent  # Update the current opponent in the session
+        session.pop('current_opponent_move', None)  # Remove the stored opponent's move from the session
+
+    # Return the battle result along with the updated round number and winning Pokemon's name
+    return {
+        'round': current_round,
+        'player_name': player_pokemon['name'],
+        'player_move_name': player_move['name'],
+        'player_damage': player_damage,
+        'player_hp': player_pokemon['hp'],
+        'opponent_name': opponent_pokemon['name'],
+        'opponent_move_name': opponent_move['name'],
+        'opponent_damage': opponent_damage,
+        'opponent_hp': opponent_pokemon['hp'],
+        'result': result,
+        'winner_name': player_pokemon['name'] if result == 'win' else opponent_pokemon['name']
+    }
+
+
+@app.route('/battle_round', methods=['POST'])
+def battle_round_endpoint():
+    # Retrieve the battle data from the AJAX POST request
+    selected_pokemon_name = request.form.get('player_pokemon_name')
+    selected_move_name = request.form.get('selected_move')
+
+    # Retrieve the player's Pokémon and current opponent from the session
+    player_pokemon = session.get('player_pokemon')
+    current_opponent_data = session.get('current_opponent')
+
+    if player_pokemon and current_opponent_data:
+        # Find the selected move in the player's Pokémon moves
+        selected_move = next((move for move in player_pokemon['moves'] if move['name'] == selected_move_name), None)
+
+        if selected_move:
+            # Get a new random move for the opponent at the beginning of each round
+            current_opponent_move = random.choice(current_opponent_data['moves'])
+
+            # Perform a single battle round and get the battle result
+            battle_result = battle_round(player_pokemon, current_opponent_data, selected_move)
+
+            # Store the current opponent's move in the session for the next round
+            session['current_opponent_move'] = current_opponent_move
+
+            # Reset the round number to 0 and get a new opponent if the battle is over
+            if battle_result['result'] != 'ongoing':
+                reset_pokemon_hp()  # Reset Pokémon HP for a new battle round
+                session['current_opponent'] = get_random_opponent()  # Get a new opponent from the data
+                session.pop('current_opponent_move', None)  # Remove the stored opponent's move from the session
+
+            # Convert the battle result to JSON and return it as a response
+            return jsonify(battle_result)
+
+    return jsonify({'error': 'Invalid request'})
 
 
 # Helper function to calculate damage with type advantages
-def calculate_damage(attacker, defender):
-    damage = attacker['ap']
-    if attacker['type'] in type_advantages and defender['type'] in type_advantages[attacker['type']]:
-        damage *= 1.5  # Apply type advantage
+def calculate_damage(attacker, defender, selected_move):
+    damage = selected_move['damage']
+    for defender_type in defender['type'].split('/'):
+        if defender_type in type_advantages and attacker['type'] in type_advantages[defender_type]:
+            damage *= type_advantages[defender_type][attacker['type']]
+        elif attacker['type'] in type_advantages and defender_type in type_advantages[attacker['type']]:
+            damage *= type_advantages[attacker['type']][defender_type]
     return int(damage)
 
 
 def level_up_pokemon(pokemon):
     # Increase the level by 1
     pokemon['level'] += 1
-    # Increase HP and AP based on the level (you can adjust these values as needed)
-    pokemon['hp'] += 10
-    pokemon['ap'] += 5
+
+    # Define scaling factors for HP and AP increases
+    hp_scaling_factor = 10
+    ap_scaling_factor = 5
+
+    # Increase HP and AP based on the scaling factors and Pokémon's level
+    pokemon['hp'] += hp_scaling_factor * pokemon['level']
+    pokemon['ap'] += ap_scaling_factor * pokemon['level']
 
 
 # Helper function to get a random opponent Pokémon for battles
@@ -147,18 +416,34 @@ def get_random_opponent():
 @app.route('/pokemon_game', methods=['GET', 'POST'])
 def pokemon_game():
     if request.method == 'POST':
-        selected_pokemon_name = request.form['pokemon']
+        selected_pokemon_name = request.form.get('pokemon')
         selected_pokemon = next((p for p in pokemon_data if p['name'] == selected_pokemon_name), None)
 
         if selected_pokemon:
+            # Store the selected player's Pokémon in the session
+            session['player_pokemon'] = selected_pokemon
+
+            # Get a random opponent and its move from the data
+            new_opponent = get_random_opponent()
+            current_opponent_move = random.choice(new_opponent['moves'])
+
+            # Store the current opponent and its move in the session
+            session['current_opponent'] = new_opponent
+            session['current_opponent_move'] = current_opponent_move
+
+            # Reset the battle log when starting a new battle
+            global battle_log
+            battle_log = []
+
+            # Redirect to the move_selection route with the selected Pokémon name
             return redirect(url_for('move_selection', pokemon_name=selected_pokemon['name']))
 
         flash('Invalid Pokémon selection. Please choose a Pokémon from the list.')
-        return redirect(url_for('pokemon_game'))
 
-    # If the request method is GET or if there was an invalid move selection
     return render_template('pokemon_game.html', pokemon_data=pokemon_data, selected_pokemon=None)
 
+
+# ... (other route handlers)
 
 @app.route('/move_selection/<pokemon_name>', methods=['GET', 'POST'])
 def move_selection(pokemon_name):
@@ -172,38 +457,68 @@ def move_selection(pokemon_name):
                 selected_move = next((move for move in selected_pokemon['moves'] if move['name'] == move_choice), None)
 
                 if selected_move:
-                    opponent = get_random_opponent()
+                    # Get the current opponent data from the session
+                    current_opponent_data = session.get('current_opponent')
 
-                    # Initiate the battle
-                    battle_log = battle_round(selected_pokemon, opponent, selected_move)
+                    if current_opponent_data:
+                        # Get the opponent's move from the session
+                        current_opponent_move = session.get('current_opponent_move')
 
-                    # Reset the HP of player and opponent's Pokémon for the next battle
-                    selected_pokemon['hp'] = selected_pokemon['max_hp']
-                    opponent['hp'] = opponent['max_hp']
+                        if current_opponent_move:
+                            # Perform a single battle round and get the battle result
+                            battle_result = battle_round(selected_pokemon, current_opponent_data, selected_move)
 
-                    # Redirect to the battle results page with battle log as query parameter
-                    return redirect(url_for('battle_results', battle_log=battle_log))
+                            # Get the winning Pokémon from the battle result
+                            winning_pokemon = next((p for p in [selected_pokemon, current_opponent_data] if
+                                                    p['name'] == battle_result['winner_name']), None)
 
-            flash('Invalid move selection. Please choose a valid move from the list.')
-            return redirect(url_for('move_selection', pokemon_name=pokemon_name))
+                            # Render the template and pass the necessary variables
+                            return render_template('move_selection.html', selected_pokemon=selected_pokemon,
+                                                   current_opponent_data=current_opponent_data,
+                                                   current_opponent_move=current_opponent_move,
+                                                   battle_result=battle_result,
+                                                   winning_pokemon=winning_pokemon)
+
+                        return jsonify({'error': 'Opponent move data not found'})
+
+                    return jsonify({'error': 'Opponent data not found'})
+
+                return jsonify({'error': 'Invalid move selection'})
+
+            return jsonify({'error': 'Invalid move selection'})
 
         else:
-            return render_template('move_selection.html', selected_pokemon=selected_pokemon)
+            # Get the current opponent data from the session
+            current_opponent_data = session.get('current_opponent')
 
-    else:
-        flash('Invalid Pokémon selection. Please choose a Pokémon from the list.')
-        return redirect(url_for('pokemon_game'))
+            if current_opponent_data:
+                # Get the opponent's move from the session
+                current_opponent_move = session.get('current_opponent_move')
 
+                if current_opponent_move:
+                    # Pass the current_opponent_data variable to the template (not opponent_pokemon)
+                    return render_template('move_selection.html', selected_pokemon=selected_pokemon,
+                                           current_opponent_data=current_opponent_data,
+                                           current_opponent_move=current_opponent_move)
 
-# ... (rest of the code remains unchanged)
+                return jsonify({'error': 'Opponent move data not found'})
 
+            return jsonify({'error': 'Opponent data not found'})
+
+    return jsonify({'error': 'Invalid Pokémon selection'})
 
 
 @app.route('/battle_results', methods=['GET'])
 def battle_results():
     # Retrieve battle log and display it in the template
-    battle_log = eval(request.args.get('battle_log'))
-    return render_template('battle_results.html', battle_log=battle_log)
+    battle_log_str = request.args.get('battle_log', type=str, default='[]')
+    result_battle_log = json.loads(battle_log_str.replace("'", '"'))  # Replace single quotes with double quotes
+
+    # Get the last round result to check if there's a winner
+    last_round_result = result_battle_log[-1] if result_battle_log else None
+    winner_name = last_round_result['winner_name'] if last_round_result and last_round_result['result'] == 'win' else None
+
+    return render_template('battle_results.html', battle_log=result_battle_log, winner_name=winner_name)
 
 
 @app.route('/')

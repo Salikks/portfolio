@@ -1,63 +1,227 @@
-<!-- pokemon_game.html -->
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Pokémon Game</title>
+    <style>
+        body {
+            background-image: url('{{ url_for('static', filename='images/fighting_pokemon.gif') }}');
+            background-repeat: no-repeat;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        form {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        select {
+            padding: 5px;
+        }
+
+        input[type="submit"] {
+            padding: 8px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #moveSelectionForm {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        #moveSelectionForm button {
+            margin: 10px;
+            padding: 8px 20px;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #battleLogContainer {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        #battleLogContainer p {
+            margin: 5px 0;
+        }
+
+        #winnerGif {
+            display: block;
+            max-width: 100%;
+            margin: 20px auto;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        #backToGameButton {
+            display: block;
+            margin: 20px auto;
+            padding: 8px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
-    <h1>Choose Your Pokémon!</h1>
-    <form method="post">
-        <select name="pokemon">
-            {% for pokemon in pokemon_data %}
-            <option value="{{ pokemon.name }}">{{ pokemon.name }}</option>
-            {% endfor %}
-        </select>
-        <br>
-        <input type="submit" value="Select Pokémon">
-    </form>
-    {% if selected_pokemon %}
-    <h2>Choose Your Move for {{ selected_pokemon.name }}</h2>
-    <form method="post" action="{{ url_for('move_selection', pokemon_name=selected_pokemon.name) }}">
-        {% for move in selected_pokemon.moves %}
-        <button type="submit" name="selected_move" value="{{ move.name }}">{{ move.name }} (Damage: {{ move.damage }})</button>
-        {% endfor %}
-    </form>
-    {% endif %}
-    <div>
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <ul>
-            {% for message in messages %}
-            <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
+    <div class="container">
+        <h1>Choose Your Pokémon!</h1>
+        <form method="post">
+            <div class="center">
+                <select name="pokemon">
+                    {% for pokemon in pokemon_data %}
+                    <option value="{{ pokemon.name }}">{{ pokemon.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <br>
+            <div class="center">
+                <input type="submit" value="Select Pokémon">
+            </div>
+        </form>
+
+        {% if selected_pokemon %}
+        <div id="moveSelectionContainer">
+            <h2>Choose Your Move for {{ selected_pokemon.name }}</h2>
+            <form id="moveSelectionForm" method="post" action="{{ url_for('move_selection', pokemon_name=selected_pokemon.name) }}">
+                {% for move in selected_pokemon.moves %}
+                <button type="submit" name="selected_move" value="{{ move.name }}">{{ move.name }} (Damage: {{ move.damage }})</button>
+                {% endfor %}
+            </form>
+        </div>
         {% endif %}
-        {% endwith %}
+
+        <div class="center">
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <ul>
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <div id="battleLogContainer" class="center">
+            <!-- The battle log will be updated dynamically here -->
+        </div>
+
+        <div id="winningPokemon" class="hidden">
+            <!-- Display the winning Pokemon animation here -->
+            <p class="center">Congratulations! <span id="winnerName"></span> is the winner!</p>
+            <img id="winnerGif" src="" alt="Winning Pokemon GIF">
+            <button id="backToGameButton" onclick="window.location.href = '{{ url_for('pokemon_game') }}';">Back to Pokemon Game</button>
+        </div>
     </div>
-    {% if battle_log %}
-    <h2>Battle Log:</h2>
-    {% for round_result in battle_log['rounds'] %}
-    {% if round_result['result'] == 'win' %}
-    <p>Congratulations! Your {{ battle_log['player_name'] }} defeated the opponent.</p>
-    {% elif round_result['result'] == 'lose' %}
-    <p>Your {{ battle_log['player_name'] }} fainted. Try again!</p>
-    {% else %}
-    <p>Round {{ loop.index }}:</p>
-    <p>{{ battle_log['player_name'] }} attacks {{ battle_log['opponent_name'] }} with {{ round_result['player_move'] }}. Damage: {{ round_result['player_damage'] }}</p>
-    <p>{{ battle_log['opponent_name'] }}'s HP: {{ round_result['opponent_hp'] }}</p>
-    <p>{{ battle_log['opponent_name'] }} attacks your {{ battle_log['player_name'] }} with {{ round_result['opponent_move'] }}. Damage: {{ round_result['opponent_damage'] }}</p>
-    <p>Your {{ battle_log['player_name'] }}'s HP: {{ round_result['player_hp'] }}</p>
-    {% endif %}
-    {% endfor %}
-    {% if not battle_log['rounds']|last %}
-    <h2>Choose Your Move for {{ battle_log['player_name'] }}</h2>
-    <form method="post" action="{{ url_for('move_selection', pokemon_name=battle_log['player_name']) }}">
-        {% for move in battle_log['player_moves'] %}
-        <button type="submit" name="selected_move" value="{{ move['name'] }}">{{ move['name'] }} (Damage: {{ move['damage'] }})</button>
-        {% endfor %}
-    </form>
-    {% endif %}
-    {% endif %}
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Updated function to format battle log data into HTML elements
+        function formatBattleLog(battleResult) {
+            let logHTML = '<p>Round ' + battleResult.round + ':</p>';
+            logHTML += '<p>' + battleResult.player_name + ' attacks ' + battleResult.opponent_name + ' with ' + battleResult.player_move_name + '. Damage: ' + battleResult.player_damage + '</p>';
+            logHTML += '<p>' + battleResult.opponent_name + "'s HP: " + battleResult.opponent_hp + '</p>';
+            logHTML += '<p>' + battleResult.opponent_name + ' attacks your ' + battleResult.player_name + ' with ' + battleResult.opponent_move_name + '. Damage: ' + battleResult.opponent_damage + '</p>';
+            logHTML += '<p>Your ' + battleResult.player_name + "'s HP: " + battleResult.player_hp + '</p>';
+            return logHTML;
+        }
+
+        $(document).ready(function() {
+            let battleLog = [];
+
+            // Function to handle the battle round
+            function performBattleRound(player_pokemon_name, selected_move) {
+                $.ajax({
+                    url: '/battle_round',
+                    type: 'POST',
+                    data: {
+                        player_pokemon_name: player_pokemon_name,
+                        selected_move: selected_move
+                    },
+                    success: function(response) {
+                        if (response.error) {
+                            alert('Error: ' + response.error);
+                        } else {
+                            battleLog.push(response);
+
+                            // Format the battle log data into HTML and append it to the container
+                            const logHTML = formatBattleLog(response);
+                            $('#battleLogContainer').append(logHTML);
+                            $('#battleLogContainer').scrollTop($('#battleLogContainer')[0].scrollHeight);
+
+                            if (response.result !== 'ongoing') {
+                                // Battle is over, display the final result
+                                alert('Battle is over!\n' + response.result);
+
+                                // Show the winning Pokemon GIF
+                                $('#winningPokemon').removeClass('hidden');
+                                $('#winnerName').text(response.winner_name);
+                                $('#winnerGif').attr('src', response.winner_gif);
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('An error occurred while performing the battle round: ' + error);
+                    }
+                });
+            }
+
+            // Event listener for move selection form submission
+            $('#moveSelectionForm').submit(function(event) {
+                event.preventDefault();
+                const playerPokemonName = '{{ selected_pokemon.name }}';
+                const selectedMove = $('input[name="selected_move"]:checked').val();
+                if (!selectedMove) {
+                    alert('Please select a move!');
+                } else {
+                    // Perform the battle round
+                    performBattleRound(playerPokemonName, selectedMove);
+                }
+            });
+        });
+    </script>
 </body>
 </html>

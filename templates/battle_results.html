@@ -1,5 +1,3 @@
-<!-- battle_results.html -->
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -14,14 +12,95 @@
             <p>Your {{ battle_log['player_name'] }} fainted. Try again!</p>
         {% else %}
             <p>Round {{ loop.index }}:</p>
-            <p>{{ battle_log['player_name'] }} attacks {{ battle_log['opponent_name'] }} with {{ round_result['player_move'] }}. Damage: {{ round_result['player_damage'] }}</p>
+            <p>{{ battle_log['player_name'] }} attacks {{ battle_log['opponent_name'] }} with {{ round_result['player_move_name'] }}. Damage: {{ round_result['player_damage'] }}</p>
             <p>{{ battle_log['opponent_name'] }}'s HP: {{ round_result['opponent_hp'] }}</p>
-            <p>{{ battle_log['opponent_name'] }} attacks your {{ battle_log['player_name'] }} with {{ round_result['opponent_move'] }}. Damage: {{ round_result['opponent_damage'] }}</p>
+            <p>{{ battle_log['opponent_name'] }} attacks your {{ battle_log['player_name'] }} with {{ round_result['opponent_move_name'] }}. Damage: {{ round_result['opponent_damage'] }}</p>
             <p>Your {{ battle_log['player_name'] }}'s HP: {{ round_result['player_hp'] }}</p>
         {% endif %}
     {% endfor %}
 
-    <!-- Add a link to go back to the Pokémon game page -->
-    <a href="{{ url_for('pokemon_game') }}">Back to Pokémon Game</a>
+    {% if battle_log['result'] == 'ongoing' %}
+        <!-- Add a button to continue the battle -->
+        <button id="continueButton">Continue</button>
+    {% else %}
+        <!-- Display the winning Pokemon animation -->
+        <div id="winningPokemon">
+            <p>Congratulations! {{ battle_log['winner_name'] }} is the winner!</p>
+            <button id="backToGameButton">Back to Pokemon Game</button>
+        </div>
+    {% endif %}
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let battleLog = {{ battle_log | tojson | safe }};
+            let roundIndex = battleLog['rounds'].length;
+
+            // Function to handle the battle round
+            function performBattleRound() {
+                const playerPokemonName = battleLog['player_name'];
+                const selectedMove = battleLog['player_moves'][roundIndex - 1]['name']; // Fixed the index
+
+                $.ajax({
+                    url: '/battle_round',
+                    type: 'POST',
+                    data: {
+                        player_pokemon_name: playerPokemonName,
+                        selected_move: selectedMove
+                    },
+                    success: function(response) {
+                        if (response.error) {
+                            alert('Error: ' + response.error);
+                        } else {
+                            battleLog['rounds'].push(response);
+                            roundIndex++;
+
+                            // Format the battle log data into HTML and append it to the container
+                            let logHTML = '<p>Round ' + response.round + ':</p>';
+                            logHTML += '<p>' + response.player_name + ' attacks ' + response.opponent_name + ' with ' + response.player_move_name + '. Damage: ' + response.player_damage + '</p>';
+                            logHTML += '<p>' + response.opponent_name + "'s HP: " + response.opponent_hp + '</p>';
+                            logHTML += '<p>' + response.opponent_name + ' attacks your ' + response.player_name + ' with ' + response.opponent_move_name + '. Damage: ' + response.opponent_damage + '</p>';
+                            logHTML += '<p>Your ' + response.player_name + "'s HP: " + response.player_hp + '</p>';
+
+                            $('#battleLogContainer').append(logHTML);
+                            $('#battleLogContainer').scrollTop($('#battleLogContainer')[0].scrollHeight);
+
+                            if (response.player_hp <= 0 || response.opponent_hp <= 0) {
+                                // One of the Pokémon has fainted, show the winning Pokemon animation
+                                $('#continueButton').hide();
+                                if (response.player_hp <= 0 && response.opponent_hp <= 0) {
+                                    // It's a tie
+                                    $('#winningPokemon').html('<p>It\'s a tie!</p>');
+                                } else if (response.player_hp <= 0) {
+                                    // Opponent wins
+                                    $('#winningPokemon').html('<p>Congratulations! ' + response.opponent_name + ' is the winner!</p>');
+                                } else {
+                                    // Player wins
+                                    $('#winningPokemon').html('<p>Congratulations! ' + response.player_name + ' is the winner!</p>');
+                                }
+                                $('#winningPokemon').show();
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('An error occurred while performing the battle round: ' + error);
+                    }
+                });
+            }
+
+            // Event listener for the "Continue" button
+            $('#continueButton').click(function() {
+                performBattleRound();
+            });
+
+            // Event listener for the "Back to Pokemon Game" button
+            $('#backToGameButton').click(function() {
+                window.location.href = '{{ url_for("pokemon_game") }}';
+            });
+
+            // Perform the first battle round when the page loads
+            performBattleRound();
+        });
+    </script>
 </body>
 </html>

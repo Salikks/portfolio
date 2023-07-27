@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Battle Round</title>
+    <!-- Add any CSS styling or scripts specific to this template if needed -->
+</head>
+<body>
+    <h2>Battle Log:</h2>
+    <!-- Display the battle log result here -->
+    <p>Round {{ round_result['round'] }}:</p>
+    <p>{{ round_result['player_name'] }} attacks {{ round_result['opponent_name'] }} with {{ round_result['player_move_name'] }}. Damage: {{ round_result['player_damage'] }}</p>
+    <p>{{ round_result['opponent_name'] }}'s HP: {{ round_result['opponent_hp'] }}</p>
+    <p>{{ round_result['opponent_name'] }} attacks your {{ round_result['player_name'] }} with {{ round_result['opponent_move_name'] }}. Damage: {{ round_result['opponent_damage'] }}</p>
+    <p>Your {{ round_result['player_name'] }}'s HP: {{ round_result['player_hp'] }}</p>
+</body>
+</html>

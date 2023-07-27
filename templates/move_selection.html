@@ -1,17 +1,184 @@
-<!-- move_selection.html -->
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Move Selection</title>
+    <style>
+        /* CSS styles for health bars and images */
+        .health-bar-container {
+            background-color: #f1f1f1;
+            border: 1px solid #ccc;
+            width: 200px;
+            height: 20px;
+            margin-bottom: 10px;
+        }
+
+        .health-bar-fill {
+            background-color: #4CAF50;
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .health-bar-text {
+            line-height: 20px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .pokemon-image {
+            max-width: 100px;
+            height: auto;
+        }
+
+        /* Center the elements */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        #battleLogContainer {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
 </head>
 <body>
     <h1>Choose Your Move for {{ selected_pokemon.name }}</h1>
-    <form method="post" action="{{ url_for('move_selection', pokemon_name=selected_pokemon.name) }}"> <!-- Updated form action -->
-        <input type="hidden" name="pokemon" value="{{ selected_pokemon.name }}">
+    <div class="health-bar-container">
+        <div class="health-bar-fill" id="playerHealthBar" style="width: 100%;"></div>
+        <div class="health-bar-text" id="playerHealthText">{{ selected_pokemon.hp }} / {{ selected_pokemon.max_hp }}</div>
+    </div>
+    <img class="pokemon-image" src="{{ url_for('static', filename='pokemon_images/' ~ selected_pokemon.image_filename) }}" alt="{{ selected_pokemon.name }}">
+
+    <form id="moveSelectionForm">
         {% for move in selected_pokemon.moves %}
-            <button type="submit" name="selected_move" value="{{ move.name }}">{{ move.name }} (Damage: {{ move.damage }})</button>
+        <button type="button" class="moveButton" value="{{ move.name }}">{{ move.name }} (Damage: {{ move.damage }})</button>
         {% endfor %}
     </form>
+
+    <div class="health-bar-container">
+        <div class="health-bar-fill" id="opponentHealthBar" style="width: 100%;"></div>
+        <div class="health-bar-text" id="opponentHealthText">{{ current_opponent_data.hp }} / {{ current_opponent_data.max_hp }}</div>
+    </div>
+    <img class="pokemon-image" src="{{ url_for('static', filename='pokemon_images/' ~ current_opponent_data.image_filename) }}" alt="{{ current_opponent_data.name }}">
+
+    <div id="battleLogContainer">
+        <!-- Display the battle log here -->
+    </div>
+
+    <div id="winningPokemon" style="display: none;">
+        <!-- Display the winning Pokemon animation here -->
+        <p>Congratulations! <span id="winnerName"></span> is the winner!</p>
+        <img id="winnerGif" src="" alt="Winning Pokemon GIF" style="display: none;">
+        <button id="backToGameButton">Back to Pokemon Game</button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Function to format battle log data into HTML elements
+        function formatBattleLog(battleResult) {
+            let logHTML = '<p>Round ' + battleResult.round + ':</p>';
+            logHTML += '<p>' + battleResult.player_name + ' attacks ' + battleResult.opponent_name + ' with ' + battleResult.player_move_name + '. Damage: ' + battleResult.player_damage + '</p>';
+            logHTML += '<p>' + battleResult.opponent_name + "'s HP: " + battleResult.opponent_hp + '</p>';
+            logHTML += '<p>' + battleResult.opponent_name + ' attacks your ' + battleResult.player_name + ' with ' + battleResult.opponent_move_name + '. Damage: ' + battleResult.opponent_damage + '</p>';
+            logHTML += '<p>Your ' + battleResult.player_name + "'s HP: " + battleResult.player_hp + '</p>';
+            return logHTML;
+        }
+
+        $(document).ready(function() {
+            let battleLog = [];
+            let currentRound = 0;
+
+            // Function to handle the battle round
+            function performBattleRound(selectedMove) {
+                const playerPokemonName = '{{ selected_pokemon.name }}';
+
+                $.ajax({
+                    url: '/battle_round',
+                    type: 'POST',
+                    data: {
+                        player_pokemon_name: playerPokemonName,
+                        selected_move: selectedMove
+                    },
+                    success: function(response) {
+                        if (response.error) {
+                            alert('Error: ' + response.error);
+                        } else {
+                            battleLog.push(response);
+                            currentRound = response.round;
+
+                            // Format the battle log data into HTML and append it to the container
+                            const logHTML = formatBattleLog(response);
+                            $('#battleLogContainer').append(logHTML);
+                            $('#battleLogContainer').scrollTop($('#battleLogContainer')[0].scrollHeight);
+
+                            // Update player and opponent health bars and texts
+                            $('#playerHealthBar').css('width', (response.player_hp / response.player_max_hp) * 100 + '%');
+                            $('#playerHealthText').text(response.player_hp + ' / ' + response.player_max_hp);
+                            $('#opponentHealthBar').css('width', (response.opponent_hp / response.opponent_max_hp) * 100 + '%');
+                            $('#opponentHealthText').text(response.opponent_hp + ' / ' + response.opponent_max_hp);
+
+                            if (response.result !== 'ongoing') {
+                                // The battle is over, display the winning Pokemon
+                                showWinningPokemon(response.winner_name);
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('An error occurred while performing the battle round: ' + error);
+                    }
+                });
+            }
+
+            // Function to display the winning Pokemon GIF and show the "Back to Pokemon Game" button
+            function showWinningPokemon(winnerName) {
+                $('#moveSelectionForm').hide();
+                $('#battleLogContainer').hide();
+                $('#winningPokemon').show();
+                $('#winnerName').text(winnerName);
+
+                // Display the winning Pokemon GIF
+                const winnerGif = getWinnerGif(winnerName);
+                $('#winnerGif').attr('src', winnerGif);
+                $('#winnerGif').show();
+
+                // Show the "Back to Pokemon Game" button
+                $('#backToGameButton').show();
+            }
+
+            // Function to get the GIF URL of the winning Pokemon
+            function getWinnerGif(winnerName) {
+                // Assuming the GIFs are stored in the 'pokemon_gifs' folder inside the 'static' folder
+                const gifFolder = "{{ url_for('static', filename='pokemon_gifs/') }}";
+
+                // Replace this object with the actual filenames of the winning Pokémon GIFs (without file extension)
+                const gifFilenames = {
+                    'Pikachu': 'pikachu',
+                    'Charizard': 'charizard_gif',
+                    // Add more filenames for other Pokémon
+                };
+
+                return gifFolder + gifFilenames[winnerName] + '.gif';
+            }
+
+            // Event listener for move buttons
+            $('.moveButton').click(function() {
+                const selectedMove = $(this).val();
+                performBattleRound(selectedMove);
+            });
+
+            // Event listener for the "Back to Pokemon Game" button
+            $('#backToGameButton').click(function() {
+                window.location.href = '{{ url_for("pokemon_game") }}';
+            });
+        });
+    </script>
 </body>
 </html>

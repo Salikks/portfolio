@@ -3,28 +3,7 @@
 <head>
     <title>Move Selection</title>
     <style>
-        /* CSS styles for health bars and images */
-        .health-bar-container {
-            background-color: #f1f1f1;
-            border: 1px solid #ccc;
-            width: 200px;
-            height: 20px;
-            margin-bottom: 10px;
-        }
-
-        .health-bar-fill {
-            background-color: #4CAF50;
-            height: 100%;
-            transition: width 0.3s;
-        }
-
-        .health-bar-text {
-            line-height: 20px;
-            text-align: center;
-            color: white;
-            font-weight: bold;
-        }
-
+        /* CSS styles for images */
         .pokemon-image {
             max-width: 100px;
             height: auto;
@@ -51,10 +30,6 @@
 </head>
 <body>
     <h1>Choose Your Move for {{ selected_pokemon.name }}</h1>
-    <div class="health-bar-container">
-        <div class="health-bar-fill" id="playerHealthBar" style="width: 100%;"></div>
-        <div class="health-bar-text" id="playerHealthText">{{ selected_pokemon.hp }} / {{ selected_pokemon.max_hp }}</div>
-    </div>
     <img class="pokemon-image" src="{{ url_for('static', filename='pokemon_images/' ~ selected_pokemon.image_filename) }}" alt="{{ selected_pokemon.name }}">
 
     <form id="moveSelectionForm">
@@ -63,10 +38,6 @@
         {% endfor %}
     </form>
 
-    <div class="health-bar-container">
-        <div class="health-bar-fill" id="opponentHealthBar" style="width: 100%;"></div>
-        <div class="health-bar-text" id="opponentHealthText">{{ current_opponent_data.hp }} / {{ current_opponent_data.max_hp }}</div>
-    </div>
     <img class="pokemon-image" src="{{ url_for('static', filename='pokemon_images/' ~ current_opponent_data.image_filename) }}" alt="{{ current_opponent_data.name }}">
 
     <div id="battleLogContainer">
@@ -118,12 +89,6 @@
                             const logHTML = formatBattleLog(response);
                             $('#battleLogContainer').append(logHTML);
                             $('#battleLogContainer').scrollTop($('#battleLogContainer')[0].scrollHeight);
-
-                            // Update player and opponent health bars and texts
-                            $('#playerHealthBar').css('width', (response.player_hp / response.player_max_hp) * 100 + '%');
-                            $('#playerHealthText').text(response.player_hp + ' / ' + response.player_max_hp);
-                            $('#opponentHealthBar').css('width', (response.opponent_hp / response.opponent_max_hp) * 100 + '%');
-                            $('#opponentHealthText').text(response.opponent_hp + ' / ' + response.opponent_max_hp);
 
                             if (response.result !== 'ongoing') {
                                 // The battle is over, display the winning Pokemon

@@ -30,7 +30,7 @@ pokemon_data = [
         'hp': 120,
         'ap': 25,
         'max_hp': 120,
-        'image_filename': 'pikachu.png',  # Add the image filename for Pikachu
+        'image_filename': 'charizard.png',  # Add the image filename for Pikachu
         'round': 1,  # Add this line to set the initial round number
         'level': 1,
         'moves': [
@@ -251,24 +251,95 @@ pokemon_data = [
     # Add more Pokémon here...
 ]
 # Type advantages (for simplicity, we'll use a dictionary)
-# Type advantages (for simplicity, we'll use a dictionary)
 type_advantages = {
     'Electric': {
-        'Water': 1.5,
+        'Water': 0.5,
+        'Ground': 1.5,
+        'Flying': 0.5,
     },
     'Grass': {
-        'Water': 1.5,
-        'Fire': 0.5,
+        'Water': 0.5,
+        'Ground': 0.5,
+        'Rock': 0.5,
+        'Fire': 1.5,
     },
     'Fire': {
-        'Grass': 1.5,
-        'Water': 0.5,
+        'Grass': 0.5,
+        'Ice': 0.5,
+        'Bug': 0.5,
+        'Steel': 0.5,
+        'Water': 1.5,
     },
     'Water': {
-        'Fire': 1.5,
-        'Grass': 0.5,
+        'Fire': 0.5,
+        'Ground': 0.5,
+        'Rock': 0.5,
+        'Grass': 1.5,
+        'Electric': 1.5,
     },
-    # Add more type advantages here...
+    'Flying': {
+        'Grass': 0.8,
+        'Fighting': 0.5,
+        'Bug': 0.5,
+        'Electric': 1.5,
+    },
+    'Normal': {
+        'Fighting': 1.5,
+        'Ghost': 1.2,
+    },
+    'Fighting': {
+        'Normal': 0.5,
+        'Ice': 0.5,
+        'Rock': 0.5,
+        'Dark': 0.5,
+        'Steel': 0.5,
+        'Flying': 1.5,
+    },
+    'Psychic': {
+        'Fighting': 0.5,
+        'Poison': 0.5,
+        'Ghost': 1.5,
+        'Bug': 1.5,
+        'Dark': 1.5,
+    },
+    'Ghost': {
+        'Normal': 0.0,
+        'Psychic': 0.5,
+        'Ghost': 2.0,
+    },
+    'Rock': {
+        'Fire': 0.5,
+        'Water': 1.5,
+        'Ice': 0.5,
+        'Flying': 0.5,
+        'Bug': 0.5,
+        'Grass': 1.5,
+        'Fighting': 1.5,
+        'Ground': 2.0,
+        'Steel': 1.5,
+    },
+    'Ground': {
+        'Fire': 0.5,
+        'Electric': 0.0,
+        'Poison': 0.5,
+        'Grass': 1.5,
+        'Steel': 0.5,
+        'Rock': 0.5,
+        'Water': 1.5,
+        'Ice': 1.5,
+    },
+    'Dragon': {
+        'Dragon': 2.0,
+        'Ice': 1.5,
+        'Fairy': 1.5,
+    },
+    'Poison': {
+        'Grass': 0.5,
+        'Ground': 1.5,
+        'Fairy': 0.5,
+        'Psychic': 1.5,
+    },
+    # Add more type advantages for other types here...
 }
 
 
@@ -346,6 +417,37 @@ def battle_round(player_pokemon, opponent_pokemon, player_move):
         'result': result,
         'winner_name': player_pokemon['name'] if result == 'win' else opponent_pokemon['name']
     }
+
+
+@app.route('/battle', methods=['GET'])
+def battle():
+    # Retrieve the player's Pokémon from the session
+    player_pokemon = session.get('player_pokemon')
+
+    # Ensure the player has selected a Pokémon before proceeding to the battle
+    if player_pokemon:
+        # Retrieve the current opponent from the session
+        current_opponent = session.get('current_opponent')
+
+        # Retrieve the current opponent's move from the session if it exists
+        current_opponent_move = session.get('current_opponent_move')
+
+        # Calculate the HP percentages of both the player's Pokémon and the opponent
+        player_hp_percentage = calculate_hp_percentage(player_pokemon)
+        opponent_hp_percentage = calculate_hp_percentage(current_opponent)
+
+        return render_template(
+            'move_selection.html',
+            player_pokemon=player_pokemon,
+            current_opponent=current_opponent,
+            current_opponent_move=current_opponent_move,
+            player_hp_percentage=player_hp_percentage,
+            opponent_hp_percentage=opponent_hp_percentage,
+            battle_log=battle_log
+        )
+
+    flash('Please select a Pokémon first before starting a battle.', 'danger')
+    return redirect(url_for('pokemon_game'))
 
 
 @app.route('/battle_round', methods=['POST'])
@@ -443,7 +545,9 @@ def pokemon_game():
     return render_template('pokemon_game.html', pokemon_data=pokemon_data, selected_pokemon=None)
 
 
-# ... (other route handlers)
+def calculate_hp_percentage(pokemon):
+    return (pokemon['hp'] / pokemon['max_hp']) * 100 if pokemon['hp'] > 0 else 0
+
 
 @app.route('/move_selection/<pokemon_name>', methods=['GET', 'POST'])
 def move_selection(pokemon_name):
@@ -516,7 +620,8 @@ def battle_results():
 
     # Get the last round result to check if there's a winner
     last_round_result = result_battle_log[-1] if result_battle_log else None
-    winner_name = last_round_result['winner_name'] if last_round_result and last_round_result['result'] == 'win' else None
+    winner_name = last_round_result['winner_name'] if last_round_result and last_round_result[
+        'result'] == 'win' else None
 
     return render_template('battle_results.html', battle_log=result_battle_log, winner_name=winner_name)
 
